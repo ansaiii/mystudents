@@ -1,6 +1,7 @@
 export default defineAppConfig({
   pages: [
-    'pages/index/index'
+    'pages/index/index',
+    'pages/account/index',
   ],
   window: {
     backgroundTextStyle: 'light',
@@ -16,15 +17,15 @@ export default defineAppConfig({
     list: [
       {
         pagePath: 'pages/index/index',
-        text: '首页',
-        iconPath: 'assets/tab-bar/home.png',
-        selectedIconPath: 'assets/tab-bar/home-active.png'
+        text: '课表',
+        iconPath: 'assets/tab-bar/home.jpg',
+        selectedIconPath: 'assets/tab-bar/home-focused.jpg'
       },
       {
-        pagePath: 'pages/about/index',
-        text: '关于',
-        iconPath: 'assets/tab-bar/about.png',
-        selectedIconPath: 'assets/tab-bar/about-active.png'
+        pagePath: 'pages/account/index',
+        text: '合同',
+        iconPath: 'assets/tab-bar/acc.jpg',
+        selectedIconPath: 'assets/tab-bar/acc-focused.jpg'
       }
     ]
   },
