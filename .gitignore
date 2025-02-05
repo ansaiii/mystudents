@@ -2,3 +2,10 @@ node_modules
 dist/
 .swc/
 .cloudbase/
+.vscode/
+.DS_Store
+.idea/
+.env
+.env.local
+.env.development
+.env.production
