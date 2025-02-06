@@ -1,0 +1,105 @@
+.schedule {
+  width: 100%;
+  min-height: 100vh;
+
+  .schedule-grid {
+    display: flex;
+    background: #fff;
+    margin-top: 24px;
+    overflow-x: auto;
+    
+    .time-column {
+      flex-shrink: 0;
+      width: 120px;
+      border-right: 1px solid #eee;
+      
+      .header-cell {
+        height: 80px;
+        border-bottom: 1px solid #eee;
+      }
+      
+      .time-cell {
+        height: 120px;
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 24px;
+        color: #666;
+      }
+    }
+
+    .day-column {
+      flex: 1;
+      min-width: 160px;
+      border-right: 1px solid #eee;
+      
+      &:last-child {
+        border-right: none;
+      }
+
+      .header-cell {
+        height: 80px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: #333;
+      }
+
+      .schedule-cell {
+        height: 120px;
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+      }
+    }
+  }
+
+  .add-button {
+    position: fixed;
+    bottom: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    height: 88px;
+    line-height: 88px;
+    background: #1890ff;
+    color: #fff;
+    font-size: 32px;
+    text-align: center;
+    border-radius: 44px;
+  }
+
+  .attendance-actions {
+    padding: 32px;
+    display: flex;
+    gap: 24px;
+
+    .action-button {
+      flex: 1;
+      height: 88px;
+      line-height: 88px;
+      text-align: center;
+      border-radius: 8px;
+      font-size: 28px;
+
+      &.normal {
+        background: #52c41a;
+        color: #fff;
+      }
+
+      &.leave {
+        background: #faad14;
+        color: #fff;
+      }
+
+      &.absent {
+        background: #ff4d4f;
+        color: #fff;
+      }
+    }
+  }
+} 
