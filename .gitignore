@@ -1,10 +1,10 @@
-node_modules
-dist/
-.swc/
-.cloudbase/
-.vscode/
-.DS_Store
-.idea/
+client/node_modules
+client/dist/
+client/.swc/
+client/.cloudbase/
+client/.vscode/
+client/.DS_Store
+client/.idea/
 .env
 .env.local
 .env.development

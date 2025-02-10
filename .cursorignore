@@ -1,9 +1,9 @@
-node_modules/
-dist/
-build/
-.git/
-*.log
-.env
-.env.*
+client/node_modules/
+client/dist/
+client/build/
+client/.git/
+client/*.log
+client/.env
+client/.env.*
 .DS_Store
 coverage/ 

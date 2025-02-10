@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": "./",
     "target": "es2017",
     "module": "commonjs",
     "removeComments": false,
@@ -21,10 +22,9 @@
       "node_modules/@types"
     ],
     "paths": {
-      // TS5090 leading './'
-      "@/*": ["./src/*"]
+      "@/*": ["./client/src/*"]
     }
   },
-  "include": ["./src", "./types", "./config"],
+  "include": ["client/src", "client/types", "client/config"],
   "compileOnSave": false
 }

@@ -1,8 +1,10 @@
 {
-  "miniprogramRoot": "dist/",
+  "miniprogramRoot": "client/dist/",
   "projectname": "mystudents",
   "description": "my students",
   "appid": "wxe4498e8b0fe6cf08",
+  "cloud": true,
+  "cloudfunctionRoot": "cloud/functions/",
   "setting": {
     "urlCheck": true,
     "es6": false,
@@ -18,7 +20,7 @@
   },
   "compileType": "miniprogram",
   "libVersion": "3.6.5",
-  "srcMiniprogramRoot": "dist/",
+  "srcMiniprogramRoot": "client/dist/",
   "packOptions": {
     "ignore": [],
     "include": []
@@ -27,5 +29,6 @@
   "editorSetting": {
     "tabIndent": "insertSpaces",
     "tabSize": 2
-  }
+  },
+  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/"
 }

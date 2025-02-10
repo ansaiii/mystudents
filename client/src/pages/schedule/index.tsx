@@ -9,6 +9,7 @@ import LessonCard from '../../components/LessonCard'
 import { scheduleService } from '../../services/schedule'
 import { getWeekStart, getWeekEnd, formatDisplayDate, formatDate, getDatesBetween, formatDisplayDateRange, formatDisplayDateWithoutYear } from '../../utils/date'
 import './index.less'
+import React from 'react'
 
 // 更新时间段配置
 const TIME_SLOTS = [
@@ -40,6 +41,15 @@ const Schedule = () => {
   }, [currentDate])
 
   const loadWeekSchedule = async () => {
+    Taro.cloud.callFunction({
+      name: 'getOpenId',
+      success: (res) => {
+        console.log('success========',res)
+      },
+      fail: (err) => {
+        console.log('fail========',err)
+      }
+    });
     const weekLessons = await scheduleService.getWeekSchedule(formatDate(weekStart))
     setLessons(weekLessons)
   }
