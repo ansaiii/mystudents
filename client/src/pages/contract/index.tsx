@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { View, Button } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import PageContainer from '../../components/PageContainer'
 import ContractCard from '../../components/ContractCard'
+import { useContract } from '../../hooks/useContract'
+
 import './index.less'
 
 interface Contract {
@@ -16,18 +18,13 @@ interface Contract {
 }
 
 const Contract = () => {
-  const [contracts] = useState<Contract[]>([
-    {
-      id: '1',
-      studentName: '张三',
-      startDate: '2024-03-15',
-      totalHours: 40,
-      remainingHours: 35,
-      pricePerHour: 200,
-      totalAmount: 8000
-    },
-    // 可以添加更多测试数据
-  ])
+  const { getContracts } = useContract()
+  const [contracts, setContracts] = useState<Contract[]>([])
+
+  useEffect(() => {
+    const allContracts = getContracts();
+    setContracts(allContracts);
+  }, []);
 
   const handleAddContract = () => {
     Taro.navigateTo({
@@ -43,7 +40,7 @@ const Contract = () => {
 
   return (
     <PageContainer className='contract-page'>
-      <View className='contract-list'>
+      {/* <View className='contract-list'>
         {contracts.map(contract => (
           <ContractCard
             key={contract.id}
@@ -51,7 +48,7 @@ const Contract = () => {
             onClick={() => handleContractClick(contract.id)}
           />
         ))}
-      </View>
+      </View> */}
       <Button className='add-button' onClick={handleAddContract}>
         新增合同
       </Button>

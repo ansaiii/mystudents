@@ -7,17 +7,25 @@ class ScheduleService {
   // 获取指定周的课程
   async getWeekSchedule(weekStart: string): Promise<Lesson[]> {
     try {
-      const { data } = await Taro.getStorage({ key: this.STORAGE_KEY })
-      const weekEnd = this.addDays(weekStart, 6)
-      return (data || []).filter((lesson: Lesson) => {
-        const lessonDate = lesson.startTime.split('-').slice(0, 3).join('-')
-        return lessonDate >= weekStart && lessonDate <= weekEnd
+      const { result } = await Taro.cloud.callFunction({
+        name: 'getWeekSchedule',
+        data: { weekStart }
       })
-    } catch (error) {
-      console.error('获取周课表失败:', error)
+
+      if (result.code === 200) {
+        return result.data?.lessons || []
+      }
+      throw new Error(result.message || '获取课表失败')
+    } catch (err) {
+      console.error('获取周课表失败:', err)
+      Taro.showToast({
+        title: '加载课表失败',
+        icon: 'none'
+      })
       return []
     }
   }
+  
 
   // 更新课程状态
   async updateLessonStatus(lessonId: string, status: LessonStatus): Promise<boolean> {

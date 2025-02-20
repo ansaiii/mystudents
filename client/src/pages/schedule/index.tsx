@@ -41,16 +41,8 @@ const Schedule = () => {
   }, [currentDate])
 
   const loadWeekSchedule = async () => {
-    Taro.cloud.callFunction({
-      name: 'getOpenId',
-      success: (res) => {
-        console.log('success========',res)
-      },
-      fail: (err) => {
-        console.log('fail========',err)
-      }
-    });
     const weekLessons = await scheduleService.getWeekSchedule(formatDate(weekStart))
+    console.log('weekLessons======', weekLessons);
     setLessons(weekLessons)
   }
 

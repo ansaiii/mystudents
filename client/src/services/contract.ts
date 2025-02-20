@@ -7,13 +7,23 @@ class ContractService {
   // 获取所有合同
   async getContracts(): Promise<Contract[]> {
     try {
-      const { data } = await Taro.getStorage({ key: this.STORAGE_KEY })
-      return data || []
-    } catch (error) {
-      console.error('获取合同列表失败:', error)
+      const { result } = await Taro.cloud.callFunction({
+        name: 'getContracts'
+      })
+      if (result.code === 200) {
+        return result.data
+      }
+      throw new Error(result.message || '获取合同列表失败')
+    } catch (err) {
+      console.error('获取合同列表失败:', err)
+      Taro.showToast({
+        title: '加载合同列表失败',
+        icon: 'none'
+      })
       return []
     }
   }
+  
 
   // 获取单个合同
   async getContractById(id: string): Promise<Contract | null> {
@@ -29,35 +39,37 @@ class ContractService {
   // 创建合同
   async createContract(contractData: CreateContractDTO): Promise<Contract> {
     try {
-      const contracts = await this.getContracts()
-      const newContract: Contract = {
-        id: `contract_${Date.now()}`,
-        ...contractData,
-        remainingHours: contractData.totalHours,
-        totalAmount: contractData.totalHours * contractData.pricePerHour,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-
-      const updatedContracts = [...contracts, newContract]
-      await Taro.setStorage({
-        key: this.STORAGE_KEY,
-        data: updatedContracts
+      const { result } = await Taro.cloud.callFunction({
+        name: 'createContract',
+        data: { contractData }
       })
 
-      return newContract
-    } catch (error) {
-      console.error('创建合同失败:', error)
-      throw new Error('创建合同失败')
+      if (result.code === 200) {
+        return {
+          ...contractData,
+          id: result.data.id,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      }
+      throw new Error(result.message || '创建合同失败')
+    } catch (err) {
+      console.error('创建合同失败:', err)
+      Taro.showToast({
+        title: '创建合同失败',
+        icon: 'none'
+      })
+      throw err
     }
   }
+
 
   // 更新合同
   async updateContract(id: string, updateData: Partial<Contract>): Promise<Contract> {
     try {
       const contracts = await this.getContracts()
       const index = contracts.findIndex(contract => contract.id === id)
-      
+
       if (index === -1) {
         throw new Error('合同不存在')
       }
@@ -86,7 +98,7 @@ class ContractService {
     try {
       const contracts = await this.getContracts()
       const updatedContracts = contracts.filter(contract => contract.id !== id)
-      
+
       await Taro.setStorage({
         key: this.STORAGE_KEY,
         data: updatedContracts

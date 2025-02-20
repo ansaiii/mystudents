@@ -1,0 +1,9 @@
+{
+  "name": "getContracts",
+  "version": "1.0.0",
+  "description": "获取合同列表",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}
