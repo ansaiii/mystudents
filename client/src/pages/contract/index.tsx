@@ -8,7 +8,7 @@ import { useContract } from '../../hooks/useContract'
 import './index.less'
 
 interface Contract {
-  id: string
+  _id: string
   studentName: string
   startDate: string
   totalHours: number
@@ -21,9 +21,19 @@ const Contract = () => {
   const { getContracts } = useContract()
   const [contracts, setContracts] = useState<Contract[]>([])
 
+  const loadContracts = async () => {
+    const allContracts = await getContracts();
+    const allContractsWithTotalAmount = allContracts.map(c => {
+      return {
+        ...c,
+        totalAmount: c.pricePerHour * c.totalHours,
+      }
+    });
+    setContracts(allContractsWithTotalAmount);
+  }
+
   useEffect(() => {
-    const allContracts = getContracts();
-    setContracts(allContracts);
+    loadContracts();
   }, []);
 
   const handleAddContract = () => {
@@ -40,15 +50,15 @@ const Contract = () => {
 
   return (
     <PageContainer className='contract-page'>
-      {/* <View className='contract-list'>
+      <View className='contract-list'>
         {contracts.map(contract => (
           <ContractCard
             key={contract.id}
             contract={contract}
-            onClick={() => handleContractClick(contract.id)}
+            onClick={() => handleContractClick(contract._id)}
           />
         ))}
-      </View> */}
+      </View>
       <Button className='add-button' onClick={handleAddContract}>
         新增合同
       </Button>

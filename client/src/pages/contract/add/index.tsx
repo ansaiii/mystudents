@@ -83,7 +83,7 @@ const ContractAdd = () => {
         studentName: formData.studentName,
         totalHours: Number(formData.totalHours),
         pricePerHour: Number(formData.pricePerHour),
-        startDate: formData.startDate
+        startDate: formData.startDate,
       })
       
       Taro.showToast({

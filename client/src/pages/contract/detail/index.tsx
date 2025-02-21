@@ -12,6 +12,7 @@ const ContractDetail = () => {
   const [contract, setContract] = useState<Contract | null>(null)
 
   useEffect(() => {
+    console.log('router.params======', router.params);
     const { id } = router.params
     if (id) {
       loadContract(id)
@@ -20,7 +21,11 @@ const ContractDetail = () => {
 
   const loadContract = async (id: string) => {
     const data = await getContractById(id)
-    setContract(data)
+    console.log('data======', data);
+    setContract({
+      ...data,
+      totalAmount: Number(data?.pricePerHour) * Number(data?.totalHours)
+    })
   }
 
   if (!contract) {
@@ -32,7 +37,7 @@ const ContractDetail = () => {
       <View className='detail-card'>
         <View className='card-header'>
           <Text className='student-name'>{contract.studentName}</Text>
-          <Text className='contract-id'>合同编号：{contract.id}</Text>
+          <Text className='contract-id'>合同编号：{contract._id}</Text>
         </View>
 
         <View className='info-section'>

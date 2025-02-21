@@ -23,16 +23,26 @@ class ContractService {
       return []
     }
   }
-  
+
 
   // 获取单个合同
   async getContractById(id: string): Promise<Contract | null> {
     try {
-      const contracts = await this.getContracts()
-      return contracts.find(contract => contract.id === id) || null
-    } catch (error) {
-      console.error('获取合同详情失败:', error)
-      return null
+      const { result } = await Taro.cloud.callFunction({
+        name: 'getContractById',
+        data: { contractId: id }
+      })
+      if (result.code === 200) {
+        return result.data
+      }
+      throw new Error(result.message || '获取合同失败')
+    } catch (err) {
+      console.error('获取合同失败:', err)
+      Taro.showToast({
+        title: '加载合同失败',
+        icon: 'none'
+      })
+      return []
     }
   }
 

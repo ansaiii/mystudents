@@ -4,12 +4,13 @@ cloud.init({
 })
 
 exports.main = async (event, context) => {
+  const wxContext = cloud.getWXContext();
   const db = cloud.database()
   
   try {
     const { data } = await db.collection('contracts')
       .where({
-        _openid: context.OPENID
+        _openid: wxContext.OPENID
       })
       .get()
       

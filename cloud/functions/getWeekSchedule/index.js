@@ -4,13 +4,14 @@ cloud.init({
 })
 
 exports.main = async (event, context) => {
+  const wxContext = cloud.getWXContext();
   const { weekStart } = event
   const db = cloud.database()
   
   try {
     const { data } = await db.collection('schedules')
       .where({
-        _openid: context.OPENID,
+        _openid: wxContext.OPENID,
         weekStart: weekStart
       })
       .get()

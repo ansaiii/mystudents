@@ -4,24 +4,21 @@ cloud.init({
 })
 
 exports.main = async (event, context) => {
-  const wxContext = cloud.getWXContext();
-  const { contractData } = event
+  const { contractId } = event
+  console.log('event=====',event);
   const db = cloud.database()
   
   try {
-    const { _id } = await db.collection('contracts').add({
-      data: {
-        ...contractData,
-        _openid: wxContext.OPENID,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    })
-    
+    const { data } = await db.collection('contracts')
+      .where({
+        _id: contractId
+      })
+      .get()
+      
     return {
       code: 200,
-      data: { id: _id },
-      message: '合同创建成功'
+      data: data[0] || null,
+      message: 'success'
     }
   } catch (err) {
     console.error('云函数调用失败:', err)
