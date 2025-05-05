@@ -5,15 +5,16 @@ class ScheduleService {
   private readonly STORAGE_KEY = 'SCHEDULES'
 
   // 获取指定周的课程
-  async getWeekSchedule(weekStart: string): Promise<Lesson[]> {
+  async getWeekSchedule(weekStart: string, weekEnd: string): Promise<Lesson[]> {
+    console.log('params======', weekStart, weekEnd);
     try {
       const { result } = await Taro.cloud.callFunction({
         name: 'getWeekSchedule',
-        data: { weekStart }
+        data: { weekStart, weekEnd }
       })
 
       if (result.code === 200) {
-        return result.data?.lessons || []
+        return result.data || []
       }
       throw new Error(result.message || '获取课表失败')
     } catch (err) {
@@ -25,7 +26,7 @@ class ScheduleService {
       return []
     }
   }
-  
+
 
   // 更新课程状态
   async updateLessonStatus(lessonId: string, status: LessonStatus): Promise<boolean> {
@@ -33,7 +34,7 @@ class ScheduleService {
       const { data } = await Taro.getStorage({ key: this.STORAGE_KEY })
       const lessons = data || []
       const index = lessons.findIndex((l: Lesson) => l.id === lessonId)
-      
+
       if (index === -1) return false
 
       lessons[index] = {
@@ -56,20 +57,15 @@ class ScheduleService {
   // 添加新课程
   async addLesson(lesson: Omit<Lesson, 'id'>): Promise<Lesson> {
     try {
-      const { data } = await Taro.getStorage({ key: this.STORAGE_KEY })
-      const lessons = data || []
-      const newLesson: Lesson = {
-        id: `lesson_${Date.now()}`,
-        ...lesson
-      }
-
-      lessons.push(newLesson)
-      await Taro.setStorage({
-        key: this.STORAGE_KEY,
-        data: lessons
+      const { result } = await Taro.cloud.callFunction({
+        name: 'addLesson',
+        data: { lesson }
       })
 
-      return newLesson
+      if (result.code === 200) {
+        return result.data
+      }
+      throw new Error(result.message || '添加课程失败')
     } catch (error) {
       console.error('添加课程失败:', error)
       throw new Error('添加课程失败')

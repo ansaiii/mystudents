@@ -34,9 +34,10 @@ const StudentSelector = ({ value, onChange }: StudentSelectorProps) => {
   }
 
   const handleSelect = (contract: Contract) => {
+    console.log('contract=======', contract);
     onChange({
       studentName: contract.studentName,
-      contractId: contract.id
+      contractId: contract._id
     })
     setIsOpened(false)
   }

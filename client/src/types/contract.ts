@@ -1,18 +1,21 @@
 export interface Contract {
-  id: string
+  _id: string
   studentName: string
+  phoneNumber: string
   startDate: string
   totalHours: number
   remainingHours: number
   pricePerHour: number
   totalAmount: number
-  createdAt: string
-  updatedAt: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface CreateContractDTO {
   studentName: string
-  totalHours: number
-  pricePerHour: number
+  phoneNumber: string
   startDate: string
+  totalHours: number
+  remainingHours: number
+  pricePerHour: number
 } 

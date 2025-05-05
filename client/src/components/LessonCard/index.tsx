@@ -27,7 +27,7 @@ const LessonCard = ({ lesson, onClick }: LessonCardProps) => {
       onClick={() => onClick(lesson)}
     >
       <Text className='student-name'>{lesson.studentName}</Text>
-      <Text className='subject'>{lesson.subject}</Text>
+      <Text className='subject'> {lesson.subject}</Text>
     </View>
   )
 }

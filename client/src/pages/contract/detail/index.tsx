@@ -42,6 +42,10 @@ const ContractDetail = () => {
 
         <View className='info-section'>
           <View className='info-item'>
+            <Text className='label'>联系电话</Text>
+            <Text className='value'>{contract.phoneNumber}</Text>
+          </View>
+          <View className='info-item'>
             <Text className='label'>开始日期</Text>
             <Text className='value'>{contract.startDate}</Text>
           </View>

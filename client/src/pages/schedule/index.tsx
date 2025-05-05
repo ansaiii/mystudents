@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { View, Text } from '@tarojs/components'
+import { View, Text, Input, Button, Picker } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtFloatLayout } from 'taro-ui'
 import PageContainer from '../../components/PageContainer'
@@ -8,6 +8,8 @@ import { Lesson, LessonStatus } from '../../types/schedule'
 import LessonCard from '../../components/LessonCard'
 import { scheduleService } from '../../services/schedule'
 import { getWeekStart, getWeekEnd, formatDisplayDate, formatDate, getDatesBetween, formatDisplayDateRange, formatDisplayDateWithoutYear } from '../../utils/date'
+import StudentSelector from '../../components/StudentSelector'
+import FormItem from '../../components/FormItem'
 import './index.less'
 import React from 'react'
 
@@ -21,19 +23,45 @@ const TIME_SLOTS = [
   { start: '19:40', end: '21:40', label: '19:40\n21:40' }
 ]
 
+const TIME_SLOT_LABELS = {
+  '08:00-10:00': '上午第一节',
+  '10:20-12:20': '上午第二节',
+  '12:40-14:40': '下午第一节',
+  '15:00-17:00': '下午第二节',
+  '17:20-19:20': '晚上第一节',
+  '19:40-21:40': '晚上第二节'
+}
+
 // 更新星期显示
 const WEEKDAYS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
+interface FormData {
+  studentName: string
+  contractId: string
+  subject: string
+  date: string
+  timeSlot: string
+}
+
 const Schedule = () => {
+  const [loading, setLoading] = useState(false)
+  const [isOpened, setIsOpened] = useState(false)
+  const [isAddMode, setIsAddMode] = useState(true)
+  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null)
+  const [formData, setFormData] = useState<FormData>({
+    studentName: '',
+    contractId: '',
+    subject: '',
+    date: '',
+    timeSlot: ''
+  })
   const [currentDate, setCurrentDate] = useState(new Date())
   const [lessons, setLessons] = useState<Lesson[]>([])
-  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null)
-  const [isOpened, setIsOpened] = useState(false)
 
   // 获取当前周的日期范围
   const weekStart = getWeekStart(currentDate)
   const weekEnd = getWeekEnd(currentDate)
-  const weekDates = getDatesBetween(weekStart, weekEnd) // 移除周末过滤
+  const weekDates = getDatesBetween(weekStart, weekEnd)
 
   // 加载周课表数据
   useEffect(() => {
@@ -41,8 +69,7 @@ const Schedule = () => {
   }, [currentDate])
 
   const loadWeekSchedule = async () => {
-    const weekLessons = await scheduleService.getWeekSchedule(formatDate(weekStart))
-    console.log('weekLessons======', weekLessons);
+    const weekLessons = await scheduleService.getWeekSchedule(formatDate(weekStart), formatDate(weekEnd))
     setLessons(weekLessons)
   }
 
@@ -59,25 +86,49 @@ const Schedule = () => {
     setCurrentDate(newDate)
   }
 
-  // 获取指定时间段的课程
-  const getLessonByTime = (date: string, timeSlot: typeof TIME_SLOTS[0]) => {
-    const timeKey = `${date}-${timeSlot.start}`
-    return lessons.find(lesson => lesson.startTime === timeKey)
+  // 检查时间冲突
+  const checkTimeConflict = async () => {
+    const [startTime] = formData.timeSlot.split('-')
+    const timeKey = `${formData.date}-${startTime}`
+
+    const weekStart = formatDate(getWeekStart(new Date(formData.date)))
+    const lessons = await scheduleService.getWeekSchedule(weekStart, formatDate(getWeekEnd(new Date(formData.date))))
+
+    const conflict = lessons.find(lesson =>
+      lesson.startTime === timeKey
+    )
+
+    if (conflict) {
+      throw new Error('该时间段已有课程安排')
+    }
   }
 
   // 处理课程点击
   const handleLessonClick = (lesson: Lesson) => {
     setSelectedLesson(lesson)
+    setIsAddMode(false)
+    setIsOpened(true)
+  }
+
+  // 处理单元格点击
+  const handleCellClick = (date: Date, timeSlot: typeof TIME_SLOTS[0]) => {
+    setFormData(prev => ({
+      ...prev,
+      date: formatDate(date),
+      timeSlot: `${timeSlot.start}-${timeSlot.end}`
+    }))
+    setSelectedLesson(null)
+    setIsAddMode(true)
     setIsOpened(true)
   }
 
   // 处理考勤
   const handleAttendance = async (status: LessonStatus) => {
     if (!selectedLesson) return
-    
+
     const success = await scheduleService.updateLessonStatus(selectedLesson.id, status)
     if (success) {
-      await loadWeekSchedule() // 重新加载数据
+      await loadWeekSchedule()
       setIsOpened(false)
       Taro.showToast({
         title: '考勤成功',
@@ -86,85 +137,193 @@ const Schedule = () => {
     }
   }
 
-  // 新增排课
-  const handleAddSchedule = () => {
-    Taro.navigateTo({
-      url: '/pages/schedule/add/index'
-    })
+  // 处理新增课程提交
+  const handleSubmit = async () => {
+    if (!formData.studentName || !formData.contractId || !formData.subject) {
+      Taro.showToast({
+        title: '请填写完整信息',
+        icon: 'none'
+      })
+      return
+    }
+
+    setLoading(true)
+    try {
+      await checkTimeConflict()
+
+      const [startTime, endTime] = formData.timeSlot.split('-')
+
+      await scheduleService.addLesson({
+        studentId: formData.contractId,
+        studentName: formData.studentName,
+        subject: formData.subject,
+        startTime: `${formData.date}-${startTime}`,
+        endTime: `${formData.date}-${endTime}`,
+        status: LessonStatus.PENDING,
+        contractId: formData.contractId
+      })
+
+      Taro.showToast({
+        title: '创建成功',
+        icon: 'success'
+      })
+
+      await loadWeekSchedule()
+      setIsOpened(false)
+    } catch (error) {
+      Taro.showToast({
+        title: error.message || '创建失败',
+        icon: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <PageContainer className='schedule'>
-      <WeekSelector
-        weekStart={formatDisplayDateRange(weekStart, weekEnd)}
-        onPrevWeek={handlePrevWeek}
-        onNextWeek={handleNextWeek}
-      />
-      
-      <View className='schedule-grid'>
-        <View className='time-column'>
-          <View className='header-cell' />
-          {TIME_SLOTS.map(slot => (
-            <View key={slot.start} className='time-cell'>
-              <Text>{slot.label}</Text>
+      <View className='header'>
+        <WeekSelector
+          weekStart={formatDisplayDateRange(weekStart, weekEnd)}
+          onPrevWeek={handlePrevWeek}
+          onNextWeek={handleNextWeek}
+        />
+      </View>
+
+      <View className='schedule-content'>
+        <View className='schedule-grid'>
+          <View className='time-column'>
+            <View className='header-cell' />
+            {TIME_SLOTS.map(slot => (
+              <View key={slot.start} className='time-cell'>
+                <Text>{slot.label}</Text>
+              </View>
+            ))}
+          </View>
+
+          {weekDates.map(date => (
+            <View key={formatDate(date)} className='day-column'>
+              <View className='header-cell'>
+                <Text>{WEEKDAYS[date.getDay() === 0 ? 6 : date.getDay() - 1]}</Text>
+                <Text className='date'>{formatDisplayDateWithoutYear(date)}</Text>
+              </View>
+              {TIME_SLOTS.map(timeSlot => {
+                const lesson = lessons.find(l =>
+                  l.startTime === `${formatDate(date)}-${timeSlot.start}`
+                )
+                return (
+                  <View
+                    key={timeSlot.start}
+                    className={`schedule-cell ${lesson ? 'has-lesson' : ''}`}
+                    onClick={() => lesson ? () => { } : handleCellClick(date, timeSlot)}
+                  >
+                    {lesson ? (
+                      <View>
+                        <LessonCard
+                          lesson={lesson}
+                          onClick={() => handleLessonClick(lesson)}
+                        />
+                        <View onClick={() => handleCellClick(date, timeSlot)}>+</View>
+                      </View>
+                    ) : (
+                      <Text>排课</Text>
+                    )}
+                  </View>
+                )
+              })}
             </View>
           ))}
         </View>
-        
-        {weekDates.map(date => (
-          <View key={formatDate(date)} className='day-column'>
-            <View className='header-cell'>
-              <Text>{WEEKDAYS[date.getDay() === 0 ? 6 : date.getDay() - 1]}</Text>
-              <Text className='date'>{formatDisplayDateWithoutYear(date)}</Text>
-            </View>
-            {TIME_SLOTS.map(timeSlot => {
-              const lesson = lessons.find(l => 
-                l.startTime === `${formatDate(date)}-${timeSlot.start}`
-              )
-              return (
-                <View key={timeSlot.start} className='schedule-cell'>
-                  {lesson && (
-                    <LessonCard
-                      lesson={lesson}
-                      onClick={handleLessonClick}
-                    />
-                  )}
-                </View>
-              )
-            })}
-          </View>
-        ))}
-      </View>
-
-      <View className='add-button' onClick={handleAddSchedule}>
-        新增排课
       </View>
 
       <AtFloatLayout
         isOpened={isOpened}
-        title={`${selectedLesson?.studentName || ''} - ${selectedLesson?.subject || ''}`}
+        title={isAddMode ? '新增课程' : `${selectedLesson?.studentName || ''} - ${selectedLesson?.subject || ''}`}
         onClose={() => setIsOpened(false)}
       >
-        <View className='attendance-actions'>
-          <View 
-            className='action-button normal'
-            onClick={() => handleAttendance(LessonStatus.COMPLETED)}
-          >
-            正常出勤
+        {isAddMode ? (
+          <View className='form-container'>
+            <FormItem label='选择学员' required>
+              <StudentSelector
+                value={formData.studentName ? {
+                  studentName: formData.studentName,
+                  contractId: formData.contractId
+                } : undefined}
+                onChange={({ studentName, contractId }) => {
+                  setFormData(prev => ({ ...prev, studentName, contractId }))
+                }}
+              />
+            </FormItem>
+
+            <FormItem label='课程科目' required>
+              <Input
+                className='input'
+                placeholder='请输入课程科目'
+                value={formData.subject}
+                onInput={e => setFormData(prev => ({ ...prev, subject: e.detail.value }))}
+              />
+            </FormItem>
+
+            <FormItem label='上课日期' required>
+              <Picker
+                mode='date'
+                value={formData.date}
+                onChange={e => setFormData(prev => ({ ...prev, date: e.detail.value }))}
+              >
+                <View className='picker'>
+                  {formData.date || '请选择上课日期'}
+                </View>
+              </Picker>
+            </FormItem>
+
+            <FormItem label='时间段' required>
+              <Picker
+                mode='selector'
+                range={Object.keys(TIME_SLOT_LABELS)}
+                value={Object.keys(TIME_SLOT_LABELS).indexOf(formData.timeSlot)}
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  timeSlot: Object.keys(TIME_SLOT_LABELS)[Number(e.detail.value)]
+                }))}
+              >
+                <View className='picker'>
+                  {formData.timeSlot ? `${formData.timeSlot} (${TIME_SLOT_LABELS[formData.timeSlot]})` : '请选择时间段'}
+                </View>
+              </Picker>
+            </FormItem>
+
+            <View className='form-footer'>
+              <Button
+                className='submit-button'
+                onClick={handleSubmit}
+                loading={loading}
+              >
+                提交
+              </Button>
+            </View>
           </View>
-          <View 
-            className='action-button leave'
-            onClick={() => handleAttendance(LessonStatus.LEAVE)}
-          >
-            请假
+        ) : (
+          <View className='attendance-actions'>
+            <View
+              className='action-button normal'
+              onClick={() => handleAttendance(LessonStatus.COMPLETED)}
+            >
+              正常出勤
+            </View>
+            <View
+              className='action-button leave'
+              onClick={() => handleAttendance(LessonStatus.LEAVE)}
+            >
+              请假
+            </View>
+            <View
+              className='action-button absent'
+              onClick={() => handleAttendance(LessonStatus.ABSENT)}
+            >
+              缺勤
+            </View>
           </View>
-          <View 
-            className='action-button absent'
-            onClick={() => handleAttendance(LessonStatus.ABSENT)}
-          >
-            缺勤
-          </View>
-        </View>
+        )}
       </AtFloatLayout>
     </PageContainer>
   )

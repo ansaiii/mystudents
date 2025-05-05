@@ -1,10 +1,11 @@
 export default defineAppConfig({
   pages: [
+    'pages/login/index',      // 登录页面
     'pages/schedule/index',    // 课表管理页面（包含考勤功能）
     'pages/contract/index',    // 合同管理页面
     'pages/contract/add/index',
     'pages/contract/detail/index',
-    'pages/schedule/add/index' // 新增排课页面
+    'pages/parent/index',      // 家长专属页面
   ],
   window: {
     backgroundTextStyle: 'light',

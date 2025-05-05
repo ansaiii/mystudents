@@ -8,6 +8,7 @@ import './index.less'
 
 interface FormData {
   studentName: string
+  phoneNumber: string
   totalHours: string
   pricePerHour: string
   startDate: string
@@ -15,6 +16,7 @@ interface FormData {
 
 interface FormErrors {
   studentName?: string
+  phoneNumber?: string
   totalHours?: string
   pricePerHour?: string
   startDate?: string
@@ -24,6 +26,7 @@ const ContractAdd = () => {
   const { createContract, loading } = useContract()
   const [formData, setFormData] = useState<FormData>({
     studentName: '',
+    phoneNumber: '',
     totalHours: '',
     pricePerHour: '',
     startDate: new Date().toISOString().split('T')[0]
@@ -35,6 +38,12 @@ const ContractAdd = () => {
     
     if (!formData.studentName.trim()) {
       newErrors.studentName = '请输入学员姓名'
+    }
+    
+    if (!formData.phoneNumber.trim()) {
+      newErrors.phoneNumber = '请输入联系电话'
+    } else if (!/^1[3-9]\d{9}$/.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = '请输入有效的手机号码'
     }
     
     if (!formData.totalHours.trim()) {
@@ -81,7 +90,9 @@ const ContractAdd = () => {
     try {
       await createContract({
         studentName: formData.studentName,
+        phoneNumber: formData.phoneNumber,
         totalHours: Number(formData.totalHours),
+        remainingHours: Number(formData.totalHours),
         pricePerHour: Number(formData.pricePerHour),
         startDate: formData.startDate,
       })
@@ -112,6 +123,16 @@ const ContractAdd = () => {
             placeholder='请输入学员姓名'
             value={formData.studentName}
             onInput={e => handleInputChange('studentName', e.detail.value)}
+          />
+        </FormItem>
+
+        <FormItem label='联系电话' required error={errors.phoneNumber}>
+          <Input
+            className='input'
+            type='number'
+            placeholder='请输入联系电话'
+            value={formData.phoneNumber}
+            onInput={e => handleInputChange('phoneNumber', e.detail.value)}
           />
         </FormItem>
 

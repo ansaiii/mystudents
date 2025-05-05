@@ -5,20 +5,23 @@ cloud.init({
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
-  const { weekStart } = event
+  const { weekStart, weekEnd } = event
   const db = cloud.database()
-  
+
   try {
     const { data } = await db.collection('schedules')
       .where({
         _openid: wxContext.OPENID,
-        weekStart: weekStart
+        startTime: db.command.and([
+          db.command.gte(weekStart + '-00:00'),
+          db.command.lte(weekEnd + '-24:00')
+        ])
       })
       .get()
-      
+
     return {
       code: 200,
-      data: data[0] || null,
+      data: data,
       message: 'success'
     }
   } catch (err) {

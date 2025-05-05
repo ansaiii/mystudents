@@ -4,6 +4,7 @@ import './index.less'
 interface ContractCardProps {
   contract: {
     studentName: string
+    phoneNumber: string
     startDate: string
     totalHours: number
     remainingHours: number
@@ -16,6 +17,7 @@ interface ContractCardProps {
 const ContractCard = ({ contract, onClick }: ContractCardProps) => {
   const {
     studentName,
+    phoneNumber,
     startDate,
     totalHours,
     remainingHours,
@@ -30,6 +32,10 @@ const ContractCard = ({ contract, onClick }: ContractCardProps) => {
         <Text className='start-date'>{startDate}</Text>
       </View>
       <View className='contract-body'>
+        <View className='info-item'>
+          <Text className='label'>联系电话：</Text>
+          <Text className='value'>{phoneNumber}</Text>
+        </View>
         <View className='info-item'>
           <Text className='label'>总课时：</Text>
           <Text className='value'>{totalHours}课时</Text>
