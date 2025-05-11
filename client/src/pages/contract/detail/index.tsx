@@ -67,10 +67,10 @@ const ContractDetail = () => {
           </View>
         </View>
 
-        <View className='action-section'>
+        {/* <View className='action-section'>
           <Button className='action-button warning'>请假</Button>
           <Button className='action-button primary'>签到</Button>
-        </View>
+        </View> */}
       </View>
     </PageContainer>
   )

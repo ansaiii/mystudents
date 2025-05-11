@@ -18,7 +18,6 @@ class ScheduleService {
       }
       throw new Error(result.message || '获取课表失败')
     } catch (err) {
-      console.error('获取周课表失败:', err)
       Taro.showToast({
         title: '加载课表失败',
         icon: 'none'
@@ -31,23 +30,15 @@ class ScheduleService {
   // 更新课程状态
   async updateLessonStatus(lessonId: string, status: LessonStatus): Promise<boolean> {
     try {
-      const { data } = await Taro.getStorage({ key: this.STORAGE_KEY })
-      const lessons = data || []
-      const index = lessons.findIndex((l: Lesson) => l.id === lessonId)
-
-      if (index === -1) return false
-
-      lessons[index] = {
-        ...lessons[index],
-        status
-      }
-
-      await Taro.setStorage({
-        key: this.STORAGE_KEY,
-        data: lessons
+      const { result } = await Taro.cloud.callFunction({
+        name: 'updateLessonStatus',
+        data: { lessonId, status }
       })
 
-      return true
+      if (result.code === 200) {
+        return true
+      }
+      throw new Error(result.message || '更新课程状态失败')
     } catch (error) {
       console.error('更新课程状态失败:', error)
       return false
@@ -61,7 +52,7 @@ class ScheduleService {
         name: 'addLesson',
         data: { lesson }
       })
-
+      console.log('result======', result);
       if (result.code === 200) {
         return result.data
       }

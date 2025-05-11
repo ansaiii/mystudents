@@ -11,7 +11,7 @@ exports.main = async (event, context) => {
   try {
     const { data } = await db.collection('schedules')
       .where({
-        _openid: wxContext.OPENID,
+        // _openid: wxContext.OPENID,
         startTime: db.command.and([
           db.command.gte(weekStart + '-00:00'),
           db.command.lte(weekEnd + '-24:00')

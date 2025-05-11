@@ -9,7 +9,7 @@ const db = cloud.database()
 
 // 云函数入口函数
 exports.main = async (event, context) => {
-  const { userInfo, openId, role } = event
+  const { userInfo, openId, role, phoneNumber } = event
 
   try {
     // 检查用户是否已存在
@@ -23,6 +23,8 @@ exports.main = async (event, context) => {
         data: {
           ...userInfo,
           role,
+          _openid: openId,
+          phoneNumber,
           createTime: db.serverDate(),
           updateTime: db.serverDate()
         }

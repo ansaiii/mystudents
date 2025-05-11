@@ -25,7 +25,6 @@ export function useContract() {
   const createContract = useCallback(async (data: CreateContractDTO) => {
     setLoading(true)
     setError(null)
-    debugger
     try {
       const newContract = await contractService.createContract(data)
       return newContract

@@ -33,6 +33,29 @@ const ContractAdd = () => {
   })
   const [errors, setErrors] = useState<FormErrors>({})
 
+  const validatePhoneNumber = (phone: string): boolean => {
+    // 移除所有空格
+    const cleanPhone = phone.replace(/\s/g, '')
+    
+    // 检查是否为空
+    if (!cleanPhone) {
+      return false
+    }
+    
+    // 检查是否为纯数字
+    if (!/^\d+$/.test(cleanPhone)) {
+      return false
+    }
+    
+    // 检查长度是否为11位
+    if (cleanPhone.length !== 11) {
+      return false
+    }
+    
+    // 检查是否符合手机号规则
+    return /^1[3-9]\d{9}$/.test(cleanPhone)
+  }
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {}
     
@@ -42,8 +65,8 @@ const ContractAdd = () => {
     
     if (!formData.phoneNumber.trim()) {
       newErrors.phoneNumber = '请输入联系电话'
-    } else if (!/^1[3-9]\d{9}$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = '请输入有效的手机号码'
+    } else if (!validatePhoneNumber(formData.phoneNumber)) {
+      newErrors.phoneNumber = '请输入正确的手机号码'
     }
     
     if (!formData.totalHours.trim()) {
@@ -67,10 +90,16 @@ const ContractAdd = () => {
   }
 
   const handleInputChange = (field: keyof FormData, value: string) => {
+    // 如果是电话号码，移除所有空格
+    if (field === 'phoneNumber') {
+      value = value.replace(/\s/g, '')
+    }
+    
     setFormData(prev => ({
       ...prev,
       [field]: value
     }))
+    
     // 清除对应字段的错误
     if (errors[field]) {
       setErrors(prev => ({
@@ -104,6 +133,7 @@ const ContractAdd = () => {
       
       // 返回上一页并刷新列表
       setTimeout(() => {
+        Taro.eventCenter.trigger('contractCreated')
         Taro.navigateBack()
       }, 1500)
     } catch (error) {

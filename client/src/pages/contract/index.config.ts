@@ -1,3 +1,5 @@
-export default definePageConfig({
-  navigationBarTitleText: '合同管理'
-}) 
+export default {
+  navigationBarTitleText: '合同列表',
+  enablePullDownRefresh: true,
+  backgroundTextStyle: 'dark'
+} 

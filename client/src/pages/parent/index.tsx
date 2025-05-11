@@ -33,6 +33,7 @@ const TIME_SLOT_LABELS = {
 const WEEKDAYS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
 const ParentPage = () => {
+  const [currentDate, setCurrentDate] = useState(new Date())
   const [weekStart, setWeekStart] = useState(new Date())
   const [weekEnd, setWeekEnd] = useState(new Date())
   const [weekDates, setWeekDates] = useState<Date[]>([])
@@ -44,24 +45,12 @@ const ParentPage = () => {
   // 加载周课表
   const loadWeekSchedule = async () => {
     setLoading(true)
-    try {
-      const { result } = await Taro.cloud.callFunction({
-        name: 'getStudentSchedule',
-        data: {
-          startDate: formatDate(weekStart),
-          endDate: formatDate(weekEnd)
-        }
-      })
-      setLessons(result || [])
-    } catch (error) {
-      console.error('加载课表失败:', error)
-      Taro.showToast({
-        title: '加载课表失败',
-        icon: 'none'
-      })
-    } finally {
-      setLoading(false)
-    }
+    const weekLessons = await scheduleService.getWeekSchedule(
+      formatDate(getWeekStart(currentDate)), 
+      formatDate(getWeekEnd(currentDate))
+    )
+    setLessons(weekLessons)
+    setLoading(false)
   }
 
   // 处理上一周
@@ -167,10 +156,6 @@ const ParentPage = () => {
           <View className='detail-item'>
             <Text className='label'>时间：</Text>
             <Text className='value'>{selectedLesson?.startTime}</Text>
-          </View>
-          <View className='detail-item'>
-            <Text className='label'>状态：</Text>
-            <Text className='value'>{selectedLesson?.status}</Text>
           </View>
         </View>
       </AtFloatLayout>

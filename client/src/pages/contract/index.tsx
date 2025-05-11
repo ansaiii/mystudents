@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { View, Button } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { usePullDownRefresh } from '@tarojs/taro'
 import PageContainer from '../../components/PageContainer'
 import ContractCard from '../../components/ContractCard'
 import { useContract } from '../../hooks/useContract'
@@ -22,19 +22,35 @@ const Contract = () => {
   const [contracts, setContracts] = useState<Contract[]>([])
 
   const loadContracts = async () => {
-    const allContracts = await getContracts();
-    const allContractsWithTotalAmount = allContracts.map(c => {
-      return {
-        ...c,
-        totalAmount: c.pricePerHour * c.totalHours,
-      }
-    });
-    setContracts(allContractsWithTotalAmount);
+    try {
+      const allContracts = await getContracts();
+      console.log('allContracts=======', allContracts);
+      const allContractsWithTotalAmount = allContracts.map(c => {
+        return {
+          ...c,
+          totalAmount: c.pricePerHour * c.totalHours,
+        }
+      }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setContracts(allContractsWithTotalAmount);
+    } catch (error) {
+      Taro.showToast({
+        title: '加载失败',
+        icon: 'error'
+      })
+    } finally {
+      Taro.stopPullDownRefresh()
+    }
   }
 
+  // 页面首次加载时获取数据
   useEffect(() => {
-    loadContracts();
-  }, []);
+    loadContracts()
+  }, [])
+
+  // 下拉刷新
+  usePullDownRefresh(() => {
+    loadContracts()
+  })
 
   const handleAddContract = () => {
     Taro.navigateTo({
@@ -53,7 +69,7 @@ const Contract = () => {
       <View className='contract-list'>
         {contracts.map(contract => (
           <ContractCard
-            key={contract.id}
+            key={contract._id}
             contract={contract}
             onClick={() => handleContractClick(contract._id)}
           />

@@ -6,6 +6,14 @@ export enum LessonStatus {
   LEAVE = 'leave'         // 请假
 }
 
+// 状态映射表
+export const StatusMap = {
+  [LessonStatus.PENDING]: '未开始',
+  [LessonStatus.COMPLETED]: '已完成',
+  [LessonStatus.ABSENT]: '缺勤',
+  [LessonStatus.LEAVE]: '请假'
+}
+
 // 课程信息
 export interface Lesson {
   id: string

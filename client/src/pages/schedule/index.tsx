@@ -4,7 +4,8 @@ import Taro from '@tarojs/taro'
 import { AtFloatLayout } from 'taro-ui'
 import PageContainer from '../../components/PageContainer'
 import WeekSelector from '../../components/WeekSelector'
-import { Lesson, LessonStatus } from '../../types/schedule'
+import { Lesson, LessonStatus as LessonStatusType } from '../../types/schedule'
+import { LessonStatus } from '../../../../types/schedule'
 import LessonCard from '../../components/LessonCard'
 import { scheduleService } from '../../services/schedule'
 import { getWeekStart, getWeekEnd, formatDisplayDate, formatDate, getDatesBetween, formatDisplayDateRange, formatDisplayDateWithoutYear } from '../../utils/date'
@@ -47,11 +48,11 @@ const Schedule = () => {
   const [loading, setLoading] = useState(false)
   const [isOpened, setIsOpened] = useState(false)
   const [isAddMode, setIsAddMode] = useState(true)
-  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null)
+  const [selectedLesson, setSelectedLesson] = useState<Lesson>({} as Lesson)
   const [formData, setFormData] = useState<FormData>({
     studentName: '',
     contractId: '',
-    subject: '',
+    subject: '软笔书法',
     date: '',
     timeSlot: ''
   })
@@ -70,6 +71,7 @@ const Schedule = () => {
 
   const loadWeekSchedule = async () => {
     const weekLessons = await scheduleService.getWeekSchedule(formatDate(weekStart), formatDate(weekEnd))
+    // console.log('weekLessons=======', weekLessons);
     setLessons(weekLessons)
   }
 
@@ -86,25 +88,9 @@ const Schedule = () => {
     setCurrentDate(newDate)
   }
 
-  // 检查时间冲突
-  const checkTimeConflict = async () => {
-    const [startTime] = formData.timeSlot.split('-')
-    const timeKey = `${formData.date}-${startTime}`
-
-    const weekStart = formatDate(getWeekStart(new Date(formData.date)))
-    const lessons = await scheduleService.getWeekSchedule(weekStart, formatDate(getWeekEnd(new Date(formData.date))))
-
-    const conflict = lessons.find(lesson =>
-      lesson.startTime === timeKey
-    )
-
-    if (conflict) {
-      throw new Error('该时间段已有课程安排')
-    }
-  }
-
   // 处理课程点击
   const handleLessonClick = (lesson: Lesson) => {
+    console.log('lesson=======', lesson);
     setSelectedLesson(lesson)
     setIsAddMode(false)
     setIsOpened(true)
@@ -117,23 +103,36 @@ const Schedule = () => {
       date: formatDate(date),
       timeSlot: `${timeSlot.start}-${timeSlot.end}`
     }))
-    setSelectedLesson(null)
+    setSelectedLesson({} as Lesson)
     setIsAddMode(true)
     setIsOpened(true)
   }
 
   // 处理考勤
-  const handleAttendance = async (status: LessonStatus) => {
+  const handleAttendance = async (status: LessonStatusType) => {
     if (!selectedLesson) return
+    console.log('selectedLesson=======', selectedLesson);
 
-    const success = await scheduleService.updateLessonStatus(selectedLesson.id, status)
+    // 检查是否重复签到
+    if (status === LessonStatus.COMPLETED && selectedLesson.status === LessonStatus.COMPLETED) {
+      const { confirm } = await Taro.showModal({
+        title: '重复签到提醒',
+        content: '该课程已经有过出勤记录，是否确认再次签到？',
+        confirmText: '确认',
+        cancelText: '取消'
+      })
+      
+      if (!confirm) return
+    }
+
+    const success = await scheduleService.updateLessonStatus(selectedLesson._id, status)
     if (success) {
       await loadWeekSchedule()
       setIsOpened(false)
       Taro.showToast({
         title: '考勤成功',
         icon: 'success'
-      })
+      });
     }
   }
 
@@ -149,7 +148,7 @@ const Schedule = () => {
 
     setLoading(true)
     try {
-      await checkTimeConflict()
+      // await checkTimeConflict()
 
       const [startTime, endTime] = formData.timeSlot.split('-')
 
@@ -159,7 +158,7 @@ const Schedule = () => {
         subject: formData.subject,
         startTime: `${formData.date}-${startTime}`,
         endTime: `${formData.date}-${endTime}`,
-        status: LessonStatus.PENDING,
+        status: LessonStatus.PENDING as LessonStatusType,
         contractId: formData.contractId
       })
 
@@ -208,21 +207,26 @@ const Schedule = () => {
                 <Text className='date'>{formatDisplayDateWithoutYear(date)}</Text>
               </View>
               {TIME_SLOTS.map(timeSlot => {
-                const lesson = lessons.find(l =>
+                const lessonArr = lessons.filter(l =>
                   l.startTime === `${formatDate(date)}-${timeSlot.start}`
                 )
                 return (
                   <View
                     key={timeSlot.start}
-                    className={`schedule-cell ${lesson ? 'has-lesson' : ''}`}
-                    onClick={() => lesson ? () => { } : handleCellClick(date, timeSlot)}
+                    className={`schedule-cell ${lessonArr.length > 0 ? 'has-lesson' : ''}`}
+                    onClick={() => lessonArr.length > 0 ? () => { } : handleCellClick(date, timeSlot)}
                   >
-                    {lesson ? (
+                    {lessonArr.length > 0 ? (
                       <View>
-                        <LessonCard
-                          lesson={lesson}
-                          onClick={() => handleLessonClick(lesson)}
-                        />
+                        {
+                          lessonArr.map(lesson => (
+                            <LessonCard
+                              key={lesson.id}
+                              lesson={lesson}
+                              onClick={() => handleLessonClick(lesson)}
+                            />
+                          ))
+                        }
                         <View onClick={() => handleCellClick(date, timeSlot)}>+</View>
                       </View>
                     ) : (
@@ -306,19 +310,19 @@ const Schedule = () => {
           <View className='attendance-actions'>
             <View
               className='action-button normal'
-              onClick={() => handleAttendance(LessonStatus.COMPLETED)}
+              onClick={() => handleAttendance(LessonStatus.COMPLETED as LessonStatusType)}
             >
               正常出勤
             </View>
             <View
               className='action-button leave'
-              onClick={() => handleAttendance(LessonStatus.LEAVE)}
+              onClick={() => handleAttendance(LessonStatus.LEAVE as LessonStatusType)}
             >
               请假
             </View>
             <View
               className='action-button absent'
-              onClick={() => handleAttendance(LessonStatus.ABSENT)}
+              onClick={() => handleAttendance(LessonStatus.ABSENT as LessonStatusType)}
             >
               缺勤
             </View>
